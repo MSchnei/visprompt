@@ -1,5 +1,5 @@
 # visprompt
-A simple GUI for experimenting with visual prompting
+A simple GUI for experimenting with visual prompting (SAM + segGPT)
 
 Current version: 0.1.0
 
@@ -18,7 +18,7 @@ poetry shell
 poetry install
 ```
 
-We need to install detectron2 using pip because there is no build more macOS available on pypi:
+We need to install detectron2 using pip because there is no build for macOS available on pypi:
 ```bash
 poetry run python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 ```
