@@ -3,6 +3,8 @@ Welcome to *visprompt*, a repository and basic GUI for experimenting with visual
 
 Current version: 0.1.0
 
+https://github.com/MSchnei/visprompt/assets/15090072/142f8110-5d6a-4954-93f7-c7858ac9c199
+
 ## Installation
 
 First, clone the project by running:
