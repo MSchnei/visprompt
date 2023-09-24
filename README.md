@@ -1,5 +1,5 @@
 # visprompt
-A simple GUI for experimenting with visual prompting (SAM + segGPT)
+Welcome to *visprompt*, a repository and basic GUI for experimenting with visual prompting based on SAM and segGPT.
 
 Current version: 0.1.0
 
