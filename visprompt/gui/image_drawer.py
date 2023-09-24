@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtCore import Qt, QPoint, Signal
-from PySide6.QtGui import QPixmap, QPainter, QPen
+from PySide6.QtGui import QPixmap, QPainter, QPen, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -20,7 +20,9 @@ from visprompt.gui.gui_image_utils import (
 class ImageDisplay(QLabel):
     image_dropped = Signal()  # Create a new Signal
 
-    def __init__(self, parent=None):
+    def __init__(
+        self, parent=None, allow_drops=False, allow_drawing=False, background_text=None
+    ):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setFrameShape(QLabel.Box)
@@ -31,8 +33,9 @@ class ImageDisplay(QLabel):
         self.scale_factor = 1.0
         self.x_offset = 0
         self.y_offset = 0
-        # By default, don't allow drawing.
-        self.allow_drawing = False
+        self.setAcceptDrops(allow_drops)
+        self.allow_drawing = allow_drawing
+        self.background_text = background_text
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls():
@@ -70,7 +73,12 @@ class ImageDisplay(QLabel):
 
     def paintEvent(self, e):
         super().paintEvent(e)
-        if self.pixmap():
+        if self.background_text and (not self.pixmap() or self.pixmap().isNull()):
+            painter = QPainter(self)
+            painter.setPen(Qt.gray)
+            painter.setFont(QFont("Arial", 20))
+            painter.drawText(self.rect(), Qt.AlignCenter, self.background_text)
+        elif self.pixmap():
             pixmap = QPixmap(self.pixmap())  # Make a copy of the current pixmap
             painter = QPainter(pixmap)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
@@ -116,10 +124,15 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         main_layout = QVBoxLayout()
 
-        self.prompt_display = ImageDisplay()
-        self.prompt_display.allow_drawing = True
+        self.prompt_display = ImageDisplay(
+            allow_drops=True,
+            allow_drawing=True,
+            background_text="Drag prompt images here.",
+        )
         self.segment_display = ImageDisplay()
-        self.user_img_display = ImageDisplay()
+        self.user_img_display = ImageDisplay(
+            allow_drops=True, background_text="Drag test images here."
+        )
         self.result_display = ImageDisplay()
 
         row1 = QHBoxLayout()
