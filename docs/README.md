@@ -4,17 +4,21 @@
 Visual prompting is an approach that takes text prompting (such as writing a prompt in ChatGPT) to computer vision. A visual prompt is a simple visual specification of a vision task.
 
 Imagine, for example, that you would like to specify the task of detecting wall cracks (and then train a model that can detected cracks on walls). Instead of writing a text prompt (like "cracks on a wall; fissures; fractures in the surface; crevices in the plaster; splits; breaks on the structure"), you would draw a few strokes on an image to denominate the crack and the background, like in the image below:
+<div align="center">
 <figure>
-  <img src="images/crack_detection.png" alt="image info" style="width:100%">
+  <img src="images/crack_detection.png" alt="image info" style="width:70%">
   <figcaption>This visual prompt specifies the task of crack detection by specifying part of the crack (pink stroke) and part of the background (light-blue stroke).</figcaption>
 </figure>
+</div>
 
 ## Promptable models and in-context learning
 In-context learning describes the idea that an ML model can learn a new task simply from the context provided within a given interaction session, rather than acquiring knowledge from a separate training process. Imagine a chat session with GPT-4, for example, where as part of your input prompt you specify a task like the one below in three examples (input-output pairs):
+<div align="center">
 <figure>
-  <img src="images/incontext_learning.png" alt="image info" style="width:100%">
+  <img src="images/incontext_learning.png" alt="image info" style="width:70%">
   <figcaption>Example of in-context learning.</figcaption>
 </figure>
+</div>
 
 Based on the examples provided in the prompt, the model learns to perform a new task like sentiment classification.
 
