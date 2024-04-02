@@ -5,13 +5,15 @@ Visual prompting is an approach that takes text prompting (such as writing a pro
 
 Imagine, for example, that you would like to specify the task of detecting wall cracks (and then train a model that can detected cracks on walls). Instead of writing a text prompt (like "cracks on a wall; fissures; fractures in the surface; crevices in the plaster; splits; breaks on the structure"), you would draw a few strokes on an image to denominate the crack and the background, like in the image below:
 
-![image info](images/crack_detection.png){: style="float: right; height: 65%; width: 65%; margin-top: 2em;"}{:class="img-responsive"}
+![image info](images/crack_detection.png)
+
 *This visual prompt specifies the task of crack detection by specifying part of the crack (pink stroke) and part of the background (light-blue stroke).*
 
 ## Promptable models and in-context learning
 In-context learning describes the idea that an ML model can learn a new task simply from the context provided within a given interaction session, rather than acquiring knowledge from a separate training process. Imagine a chat session with GPT-4, for example, where as part of your input prompt you specify a task like the one below in three examples (input-output pairs):
 
-![image info](images/incontext_learning.png){: style="float: right; height: 65%; width: 65%; margin-left: 1em; margin-top: 2em;"}{:class="img-responsive"}
+![image info](images/incontext_learning.png)
+
 *Example of in-context learning.*
 
 Based on the examples provided in the prompt, the model learns to perform a new task like sentiment classification.
@@ -28,7 +30,8 @@ The way that Landing AI and others advertise this, is by contrasting the old "tr
 Imagine that we need to build a hologram detector for document images. According to the traditional workflow, we would first need to collect training data and labels, then train a model, to finally predict and run inference. Overall, a process that can take several weeks. In contrast, in the prompt-based workflow, we would simply use a visual prompt by specifying holograms and backgrounds with one stroke each in a couple of images. This prompt could then be generalised with a promptable model (think for example key point prediction with SegGPT), which could then be used for prediction/inference immediately.
 
 The contrast between the old and the new workflow is also highlighted in the figure below:
-![image info](images/old_vs_new_workflow.png){: style="float: right; height: 65%; width: 65%; margin-left: 1em; margin-top: 2em;"}{:class="img-responsive"}
+![image info](images/old_vs_new_workflow.png)
+
 *In the old workflow (left), collecting data and labels is time-consuming. In the new workflow (right), the task is specified in a matter of seconds.*
 
 ## Advantages of visual prompts
