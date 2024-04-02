@@ -12,9 +12,9 @@
 !tests/*.png
 !tests/*.jpg
 !tests/*.jpeg
-!images/*.png
-!images/*.jpg
-!images/*.jpeg
+!docs/images/*.png
+!docs/images/*.jpg
+!docs/images/*.jpeg
 
 # IntelliJ
 .idea/
