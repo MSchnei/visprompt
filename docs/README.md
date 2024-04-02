@@ -30,9 +30,10 @@ The way that Landing AI and others advertise this, is by contrasting the old "tr
 Imagine that we need to build a hologram detector for document images. According to the traditional workflow, we would first need to collect training data and labels, then train a model, to finally predict and run inference. Overall, a process that can take several weeks. In contrast, in the prompt-based workflow, we would simply use a visual prompt by specifying holograms and backgrounds with one stroke each in a couple of images. This prompt could then be generalised with a promptable model (think for example key point prediction with SegGPT), which could then be used for prediction/inference immediately.
 
 The contrast between the old and the new workflow is also highlighted in the figure below:
-![image info](images/old_vs_new_workflow.png)
-
-*In the old workflow (left), collecting data and labels is time-consuming. In the new workflow (right), the task is specified in a matter of seconds.*
+<figure>
+  <img src="images/old_vs_new_workflow.png" alt="image info" style="width:100%">
+  <figcaption>In the old workflow (left), collecting data and labels is time-consuming. In the new workflow (right), the task is specified in a matter of seconds.</figcaption>
+</figure>
 
 ## Advantages of visual prompts
 As an alternative to visual prompting, it is also possible to use text prompts in combination with CLIP embeddings. In a classification setting, together with image similarity search, this offers a splendid strategy for collecting data in an automatic fashion. However, there are a few limitations to this approach:
