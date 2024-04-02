@@ -5,7 +5,7 @@ Visual prompting is an approach that takes text prompting (such as writing a pro
 
 Imagine, for example, that you would like to specify the task of detecting wall cracks (and then train a model that can detected cracks on walls). Instead of writing a text prompt (like "cracks on a wall; fissures; fractures in the surface; crevices in the plaster; splits; breaks on the structure"), you would draw a few strokes on an image to denominate the crack and the background, like in the image below:
 
-![image info](images/crack_detection.png){: style="float: right; height: 65%; width: 65%; margin-left: 1em; margin-top: 2em;"}{:class="img-responsive"}
+![image info](images/crack_detection.png){: style="float: right; height: 65%; width: 65%; margin-top: 2em;"}{:class="img-responsive"}
 *This visual prompt specifies the task of crack detection by specifying part of the crack (pink stroke) and part of the background (light-blue stroke).*
 
 ## Promptable models and in-context learning
