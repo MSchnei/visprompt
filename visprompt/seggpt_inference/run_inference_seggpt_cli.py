@@ -1,93 +1,87 @@
-import click
-import torch
-import numpy as np
 from functools import lru_cache
-from PIL import Image
 from pathlib import Path
-import visprompt.seggpt_inference.models_seggpt as models_seggpt
-from visprompt.seggpt_inference.seggpt_engine import inference_image
 from typing import List
+
+import click
+import numpy as np
+import torch
+from PIL import Image
+from transformers import SegGptForImageSegmentation, SegGptImageProcessor
 
 
 class SegGPTInference:
     def __init__(
         self,
-        ckpt_path="models/seggpt_vit_large.pth",
-        model_type="seggpt_vit_large_patch16_input896x448",
-        seg_type="instance",
+        model_id="BAAI/seggpt-vit-large",
+        num_labels=1,
         device="cpu",
     ):
-        self.ckpt_path = ckpt_path
-        self.model_type = model_type
-        self.seg_type = seg_type
+        self.model_id = model_id
+        self.num_labels = num_labels
         self.device = device
-        self.model = None
+        self._load_processor_and_model()
 
     @lru_cache(maxsize=None)
-    def _load_model(self):
-        if self.model is None:
-            print("Loading the SegGPT model...")
-            self.model = getattr(models_seggpt, self.model_type)()
-            self.model.seg_type = self.seg_type
-            checkpoint = torch.load(self.ckpt_path, map_location="cpu")
-            self.model.load_state_dict(checkpoint["model"], strict=False)
-            self.model.to(device=self.device)
-            self.model.eval()
+    def _load_processor_and_model(self):
+        self.processor = SegGptImageProcessor.from_pretrained(self.model_id)
+        self.model = SegGptForImageSegmentation.from_pretrained(self.model_id).to(
+            self.device
+        )
 
     def run_inference(
         self,
         input_image: Image.Image,
         prompt_images: List[Image.Image],
         prompt_targets: List[Image.Image],
-    ):
-        self._load_model()
-        mask = inference_image(
-            self.model,
-            self.device,
-            input_image,
-            prompt_images,
-            prompt_targets,
-        )
+    ) -> torch.Tensor:
+        inputs = self.processor(
+            images=input_image,
+            prompt_images=prompt_images,
+            prompt_masks=prompt_targets,
+            num_labels=self.num_labels,
+            return_tensors="pt",
+        ).to(self.device)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+
+        target_sizes = [input_image.size[::-1]]
+        mask = self.processor.post_process_semantic_segmentation(
+            outputs, target_sizes, num_labels=self.num_labels
+        )[0]
         return mask
 
 
 @click.command()
 @click.option(
-    "--ckpt-path",
+    "--model-id",
     type=click.STRING,
-    default="models/seggpt_vit_large.pth",
-    help="Path to downloaded model weights",
-)
-@click.option(
-    "--model-type",
-    type=click.STRING,
-    default="seggpt_vit_large_patch16_input896x448",
-    help="Name of the model",
+    default="BAAI/seggpt-vit-large",
+    help="Model ID on huggingface",
 )
 @click.option(
     "--input-image",
     type=click.STRING,
-    default="examples/hmbb_2.jpg",
+    default="/Users/marianschneider/git/visprompt/examples/hmbb_2.jpg",
     help="Image for which we want to find segmentation mask",
 )
 @click.option(
     "--prompt-images",
     type=click.STRING,
     multiple=True,
-    default=["examples/hmbb_1.jpg"],
+    default=["/Users/marianschneider/git/visprompt/examples/hmbb_1.jpg"],
     help="Image on which we specify segmentation task",
 )
 @click.option(
     "--prompt-targets",
     type=click.STRING,
     multiple=True,
-    default=["examples/hmbb_1_target.png"],
+    default=["/Users/marianschneider/git/visprompt/examples/hmbb_1_target.png"],
     help="Segmentation prompt for prompt image",
 )
 @click.option(
-    "--seg-type",
-    type=click.STRING,
-    required=False,
+    "--num-labels",
+    type=click.INT,
+    default=1,
     help="Image on which we specify segmentation task",
 )
 @click.option("--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu")
@@ -97,12 +91,11 @@ class SegGPTInference:
     default="output_dir",
 )
 def run_inference_seggpt_cli(
-    ckpt_path: str,
-    model_type: str,
+    model_id: str,
     input_image: str,
     prompt_images: str,
     prompt_targets: str,
-    seg_type: str,
+    num_labels: int,
     device: str,
     output_dir: str,
 ):
@@ -117,7 +110,7 @@ def run_inference_seggpt_cli(
         Image.open(prompt_target).convert("RGB") for prompt_target in prompt_targets
     ]
 
-    inference_instance = SegGPTInference(ckpt_path, model_type, seg_type, device)
+    inference_instance = SegGPTInference(model_id, num_labels, device)
     mask = inference_instance.run_inference(
         input_image=image,
         prompt_images=prompt_images,
@@ -125,8 +118,11 @@ def run_inference_seggpt_cli(
     )
 
     output = Image.fromarray(
-        (np.array(image) * (0.6 * mask / 255 + 0.4)).astype(np.uint8)
+        (np.array(image) * (0.6 * mask.numpy()[:, :, np.newaxis] + 0.4)).astype(
+            np.uint8
+        )
     )
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
     out_path = Path(output_dir) / ("output_" + Path(input_image).stem + ".png")
     output.save(out_path)
 
