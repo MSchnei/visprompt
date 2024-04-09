@@ -2,7 +2,6 @@ from functools import lru_cache
 from pathlib import Path
 
 import click
-import cv2
 import numpy as np
 import torch
 from PIL import Image
