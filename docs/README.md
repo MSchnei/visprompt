@@ -44,3 +44,12 @@ As an alternative to visual prompting, it is also possible to use text prompts i
 
 1. For specialised images (for example, images of LCD display defects, cell cultures or tree cover) it might be easier and more natural to describe a task with a visual prompt rather than trying to use the English vocabulary
 2. For tasks beyond classification, such as object detection and semantic segmentation a visual prompt will more naturally communicate the intent
+
+## How to get started with visual prompting.
+The authors of the [SegGPT: Segmenting Everything In Context](https://arxiv.org/abs/2304.03284) paper have built a [demo on their huggingface space](https://huggingface.co/spaces/BAAI/SegGPT) that allows you to experiment with visual prompting on your own data. 
+
+If you would like to try visual prompting but your data is proprietary or PII data, I provide a repository and basic GUI for experimenting with visual prompting based on SAM and segGPT [here](https://github.com/MSchnei/visprompt).
+<figure>
+  <img src="images/visprompt_gui_overview.png" alt="image info" style="width:100%">
+  <figcaption>Basic GUI to experiment with visual prompting on your own data based on this [repo](https://github.com/MSchnei/visprompt).</figcaption>
+</figure>
