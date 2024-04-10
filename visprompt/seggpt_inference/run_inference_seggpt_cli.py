@@ -19,10 +19,10 @@ class SegGPTInference:
         self.model_id = model_id
         self.num_labels = num_labels
         self.device = device
-        self._load_processor_and_model()
+        self.load_processor_and_model()
 
     @lru_cache(maxsize=None)
-    def _load_processor_and_model(self):
+    def load_processor_and_model(self):
         self.processor = SegGptImageProcessor.from_pretrained(self.model_id)
         self.model = SegGptForImageSegmentation.from_pretrained(self.model_id).to(
             self.device

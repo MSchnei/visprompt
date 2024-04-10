@@ -16,10 +16,10 @@ class SAMInference:
     ):
         self.model_id = model_id
         self.device = device
-        self._load_processor_and_model()
+        self.load_processor_and_model()
 
     @lru_cache(maxsize=None)
-    def _load_processor_and_model(self):
+    def load_processor_and_model(self):
         self.processor = SamProcessor.from_pretrained("facebook/sam-vit-large")
         self.model = SamModel.from_pretrained("facebook/sam-vit-large").to(self.device)
 
