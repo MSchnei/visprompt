@@ -34,17 +34,19 @@ class SegGPTInference:
         prompt_images: List[Image.Image],
         prompt_targets: List[Image.Image],
     ) -> torch.Tensor:
+        nb_prompts = len(prompt_images)
         inputs = self.processor(
-            images=input_image,
+            images=[input_image] * nb_prompts,
             prompt_images=prompt_images,
             prompt_masks=prompt_targets,
             num_labels=self.num_labels,
             return_tensors="pt",
+            feature_ensemble=True if nb_prompts > 1 else False,
         ).to(self.device)
         with torch.no_grad():
             outputs = self.model(**inputs)
 
-        target_sizes = [input_image.size[::-1]]
+        target_sizes = [input_image.size[::-1]] * nb_prompts
         mask = self.processor.post_process_semantic_segmentation(
             outputs, target_sizes, num_labels=self.num_labels
         )[0]
