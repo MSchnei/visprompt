@@ -144,7 +144,6 @@ def get_segmentation_image_from_seggpt(
         mask = np.repeat(mask.numpy()[:, :, np.newaxis], 3, axis=2)
         mask = mask.astype(np.uint8)
         mask[mask == 1] = 255
-        # masks.append(numpy_array_to_qimage(np.ascontiguousarray(mask)))
         masks.append(numpy_array_to_qimage(mask))
 
     return masks
