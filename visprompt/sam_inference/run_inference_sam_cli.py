@@ -1,80 +1,65 @@
-import click
-import cv2
-import numpy as np
-
 from functools import lru_cache
-from PIL import Image
 from pathlib import Path
-from segment_anything import sam_model_registry, SamPredictor
+
+import click
+import numpy as np
+import torch
+from PIL import Image
+from transformers import SamModel, SamProcessor
 
 
 class SAMInference:
     def __init__(
-        self, ckpt_path="models/sam_vit_l_0b3195.pth", model_type="vit_l", device="mps"
+        self,
+        model_id="facebook/sam-vit-large",
+        device="cpu",
     ):
-        self.ckpt_path = ckpt_path
-        self.model_type = model_type
+        self.model_id = model_id
         self.device = device
-        self.model = None
+        self.load_processor_and_model()
 
     @lru_cache(maxsize=None)
-    def _load_model(self):
-        if self.model is None:
-            print("Loading the SAM model ...")
-            self.model = sam_model_registry[self.model_type](checkpoint=self.ckpt_path)
-            self.model.to(device=self.device)
+    def load_processor_and_model(self):
+        self.processor = SamProcessor.from_pretrained("facebook/sam-vit-large")
+        self.model = SamModel.from_pretrained("facebook/sam-vit-large").to(self.device)
 
     def run_inference(
         self,
-        prompt_image: np.array,
-        input_point: np.array,
-        input_label: np.array,
-        multimask_output: bool,
-    ):
-        self._load_model()
-        predictor = SamPredictor(self.model)
-        predictor.set_image(prompt_image)
-        masks, _, _ = predictor.predict(
-            point_coords=input_point,
-            point_labels=input_label,
-            multimask_output=multimask_output,
+        prompt_image: Image.Image,
+        input_points: np.array,
+    ) -> torch.Tensor:
+        inputs = self.processor(
+            prompt_image, input_points=input_points, return_tensors="pt"
+        ).to(self.device)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+
+        return self.processor.image_processor.post_process_masks(
+            outputs.pred_masks.cpu(),
+            inputs["original_sizes"].cpu(),
+            inputs["reshaped_input_sizes"].cpu(),
         )
-        return masks.astype(np.uint8)
 
 
 @click.command()
 @click.option(
-    "--ckpt-path",
+    "--model-id",
     type=click.STRING,
-    default="models/sam_vit_l_0b3195.pth",
-    help="Path to downloaded model weights",
-)
-@click.option(
-    "--model-type",
-    type=click.STRING,
-    default="vit_l",
-    help="Name of the model",
+    default="facebook/sam-vit-large",
+    help="Model ID on huggingface",
 )
 @click.option(
     "--prompt-image",
     type=click.STRING,
-    default="examples/hmbb_1.jpg",
+    default="/Users/marianschneider/git/visprompt/examples/hmbb_1.jpg",
     help="Image on which we perform SAM segmentation",
 )
 @click.option(
-    "--input-point",
-    type=click.INT,
+    "--input-points",
     default=[100, 150],
     multiple=True,
     help="Point prompt for the segmentation task",
 )
-@click.option(
-    "--input-label",
-    type=click.INT,
-    default=1,
-    help="Corresponding label for input point. 1 means foreground / 0 means background",
-)
-@click.option("--multimask-output/--no-multimask-output", type=click.BOOL, default=True)
 @click.option("--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu")
 @click.option(
     "--output_dir",
@@ -82,41 +67,32 @@ class SAMInference:
     default="output_dir",
 )
 def run_inference_sam_cli(
-    ckpt_path: str,
-    model_type: str,
+    model_id: str,
     prompt_image: str,
-    input_point: int,
-    input_label: int,
-    multimask_output: bool,
+    input_points: int,
     device: str,
     output_dir: str,
 ):
     """CLI for running inference with SAM."""
 
     # process image
-    image = cv2.imread(prompt_image)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = Image.open(prompt_image).convert("RGB")
+    input_points = [[list(input_points)]]
 
-    # process input points and label
-    input_point = np.array([input_point])
-    input_label = np.array([input_label])
-
-    inference_instance = SAMInference(ckpt_path, model_type, device)
-    masks = inference_instance.run_inference(
+    inference_instance = SAMInference(model_id, device)
+    mask = inference_instance.run_inference(
         prompt_image=image,
-        input_point=input_point,
-        input_label=input_label,
-        multimask_output=multimask_output,
-    )
+        input_points=input_points,
+    )[0]
 
-    # save
-    for index in range(masks.shape[0]):
-        output_mask = np.repeat(masks[index, ...][:, :, np.newaxis], 3, axis=2)
-        output = Image.fromarray((image * (0.6 * output_mask + 0.4)).astype(np.uint8))
-        out_path = Path(output_dir) / (
-            "output_" + Path(prompt_image).stem + f"_{index}.png"
-        )
-        output.save(out_path)
+    output = Image.fromarray(
+        (
+            np.array(image) * (0.6 * mask.squeeze().numpy()[0][:, :, np.newaxis] + 0.4)
+        ).astype(np.uint8)
+    )
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    out_path = Path(output_dir) / ("output_" + Path(prompt_image).stem + ".png")
+    output.save(out_path)
 
 
 if __name__ == "__main__":
