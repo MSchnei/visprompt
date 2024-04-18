@@ -11,7 +11,9 @@ from visprompt.sam_inference.run_inference_sam_cli import SAMInference
 from visprompt.seggpt_inference.run_inference_seggpt_cli import SegGPTInference
 
 
-def transform_points(points, scale_factor, x_offset, y_offset):
+def transform_points(
+    points: List[QPoint], scale_factor: int, x_offset: int, y_offset: int
+) -> List[QPoint]:
     transformed = []
     for point in points:
         x = (point.x() - x_offset) / scale_factor
@@ -20,7 +22,7 @@ def transform_points(points, scale_factor, x_offset, y_offset):
     return transformed
 
 
-def qimage_to_numpy_array(qimage):
+def qimage_to_numpy_array(qimage: QImage) -> np.ndarray:
     # Get image dimensions
     width = qimage.width()
     height = qimage.height()
@@ -28,6 +30,10 @@ def qimage_to_numpy_array(qimage):
 
     # Get pointer to the image data
     ptr = qimage.bits()
+
+    # Check if pointer is valid
+    if ptr is None:
+        raise ValueError("Invalid image data or unsupported image format.")
 
     # Convert to bytes (this step is important)
     bytearr = bytes(ptr)
@@ -65,11 +71,15 @@ def qimage_to_numpy_array(qimage):
     return arr
 
 
-def numpy_array_to_qimage(array):
+def numpy_array_to_qimage(array: np.ndarray) -> QImage:
     # Ensure the array is shaped correctly
     if len(array.shape) == 3:
-        assert array.shape[2] == 3, f"Expected 3 channels but got {array.shape[2]}"
-        assert array.dtype == np.uint8, f"Expected dtype np.uint8 but got {array.dtype}"
+        assert (
+            array.shape[2] == 3
+        ), f"Expected 3 channels but got {array.shape[2]}"
+        assert (
+            array.dtype == np.uint8
+        ), f"Expected dtype np.uint8 but got {array.dtype}"
         height, width, _ = array.shape
         format = QImage.Format_RGB888
     else:
@@ -84,7 +94,9 @@ def numpy_array_to_qimage(array):
     return image
 
 
-def get_segmentation_image_from_sam(prompt_images: List[QImage], drawing_points_list):
+def get_segmentation_image_from_sam(
+    prompt_images: List[QImage], drawing_points_list
+):
     assert len(prompt_images) == len(
         drawing_points_list
     ), "Number of prompt images must match number of drawing points sets."
@@ -94,7 +106,9 @@ def get_segmentation_image_from_sam(prompt_images: List[QImage], drawing_points_
 
     inference_instance = SAMInference(device="cpu")
 
-    for prompt_image, drawing_points in tqdm(zip(prompt_images, drawing_points_list)):
+    for prompt_image, drawing_points in tqdm(
+        zip(prompt_images, drawing_points_list)
+    ):
         prompt_image_np = qimage_to_numpy_array(prompt_image.toImage())
         # nb_images, nb_predictions, nb_points_per_mask, 2
         input_points = [[[[point.x(), point.y()] for point in drawing_points]]]
@@ -105,7 +119,9 @@ def get_segmentation_image_from_sam(prompt_images: List[QImage], drawing_points_
         )[0]
 
         # Modify the mask values to match QImage's expectations.
-        mask = np.repeat(mask.squeeze().numpy()[0][:, :, np.newaxis], 3, axis=2)
+        mask = np.repeat(
+            mask.squeeze().numpy()[0][:, :, np.newaxis], 3, axis=2
+        )
         mask = mask.astype(np.uint8)
         mask[mask == 1] = 255
 
@@ -133,7 +149,9 @@ def get_segmentation_image_from_seggpt(
     inference_instance = SegGPTInference(device="cpu")
     masks = []
     for user_image in tqdm(user_images):
-        user_image = Image.fromarray(qimage_to_numpy_array(user_image.toImage()))
+        user_image = Image.fromarray(
+            qimage_to_numpy_array(user_image.toImage())
+        )
         mask = inference_instance.run_inference(
             input_image=user_image,
             prompt_images=prompt_images,

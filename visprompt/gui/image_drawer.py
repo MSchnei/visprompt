@@ -1,19 +1,21 @@
 import sys
-from PySide6.QtCore import Qt, QPoint, Signal
-from PySide6.QtGui import QPixmap, QPainter, QPen, QFont
+
+from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtGui import QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
-    QMainWindow,
-    QWidget,
-    QLabel,
-    QVBoxLayout,
     QHBoxLayout,
+    QLabel,
+    QMainWindow,
     QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
+
 from visprompt.gui.gui_image_utils import (
-    transform_points,
     get_segmentation_image_from_sam,
     get_segmentation_image_from_seggpt,
+    transform_points,
 )
 
 
@@ -21,7 +23,11 @@ class ImageDisplay(QLabel):
     image_dropped = Signal()  # Create a new Signal
 
     def __init__(
-        self, parent=None, allow_drops=False, allow_drawing=False, background_text=None
+        self,
+        parent=None,
+        allow_drops=False,
+        allow_drawing=False,
+        background_text=None,
     ):
         super().__init__(parent)
         self.setAcceptDrops(True)
@@ -49,7 +55,9 @@ class ImageDisplay(QLabel):
         if pixmap.isNull():
             print("Failed to load image.")
         else:
-            pixmap = pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio)
+            pixmap = pixmap.scaled(
+                self.width(), self.height(), Qt.KeepAspectRatio
+            )
             self.image_list.append(pixmap)
             self.current_index = len(self.image_list) - 1
             self.points.append([])
@@ -73,13 +81,17 @@ class ImageDisplay(QLabel):
 
     def paintEvent(self, e):
         super().paintEvent(e)
-        if self.background_text and (not self.pixmap() or self.pixmap().isNull()):
+        if self.background_text and (
+            not self.pixmap() or self.pixmap().isNull()
+        ):
             painter = QPainter(self)
             painter.setPen(Qt.gray)
             painter.setFont(QFont("Arial", 20))
             painter.drawText(self.rect(), Qt.AlignCenter, self.background_text)
         elif self.pixmap():
-            pixmap = QPixmap(self.pixmap())  # Make a copy of the current pixmap
+            pixmap = QPixmap(
+                self.pixmap()
+            )  # Make a copy of the current pixmap
             painter = QPainter(pixmap)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
 
@@ -94,10 +106,14 @@ class ImageDisplay(QLabel):
             if aspect_pixmap > aspect_label:
                 self.scale_factor = label_width / pixmap_width
                 self.x_offset = 0
-                self.y_offset = (label_height - (pixmap_height * self.scale_factor)) / 2
+                self.y_offset = (
+                    label_height - (pixmap_height * self.scale_factor)
+                ) / 2
             else:
                 self.scale_factor = label_height / pixmap_height
-                self.x_offset = (label_width - (pixmap_width * self.scale_factor)) / 2
+                self.x_offset = (
+                    label_width - (pixmap_width * self.scale_factor)
+                ) / 2
                 self.y_offset = 0
 
             # Check for valid index before attempting to retrieve points
@@ -181,8 +197,12 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
         # Connect the new Signal to an appropriate slot function
-        self.prompt_display.image_dropped.connect(self.update_prompt_navigation_buttons)
-        self.user_img_display.image_dropped.connect(self.update_navigation_buttons)
+        self.prompt_display.image_dropped.connect(
+            self.update_prompt_navigation_buttons
+        )
+        self.user_img_display.image_dropped.connect(
+            self.update_navigation_buttons
+        )
         # Set initial window size
         self.resize(800, 800)
         # To store the segmented images
@@ -211,7 +231,9 @@ class MainWindow(QMainWindow):
         if self.segmented_prompt_images:  # If segmented images are available
             self.segment_display.setPixmap(
                 QPixmap.fromImage(
-                    self.segmented_prompt_images[self.prompt_display.current_index]
+                    self.segmented_prompt_images[
+                        self.prompt_display.current_index
+                    ]
                 )
             )
 
@@ -227,7 +249,9 @@ class MainWindow(QMainWindow):
         if self.segmented_prompt_images:  # If segmented images are available
             self.segment_display.setPixmap(
                 QPixmap.fromImage(
-                    self.segmented_prompt_images[self.prompt_display.current_index]
+                    self.segmented_prompt_images[
+                        self.prompt_display.current_index
+                    ]
                 )
             )
 
@@ -238,7 +262,9 @@ class MainWindow(QMainWindow):
             self.user_img_display.current_index - 1
         ) % len(self.user_img_display.image_list)
         self.user_img_display.setPixmap(
-            self.user_img_display.image_list[self.user_img_display.current_index]
+            self.user_img_display.image_list[
+                self.user_img_display.current_index
+            ]
         )
         if self.segmented_images:  # If segmented images are available
             self.result_display.setPixmap(
@@ -254,7 +280,9 @@ class MainWindow(QMainWindow):
             self.user_img_display.current_index + 1
         ) % len(self.user_img_display.image_list)
         self.user_img_display.setPixmap(
-            self.user_img_display.image_list[self.user_img_display.current_index]
+            self.user_img_display.image_list[
+                self.user_img_display.current_index
+            ]
         )
         if self.segmented_images:  # If segmented images are available
             self.result_display.setPixmap(
@@ -273,7 +301,8 @@ class MainWindow(QMainWindow):
             self.run_sam_segmentation()
         else:
             raise Exception(
-                "SAM segmentation prerequisites not met. Ensure prompt image and drawing points are provided."
+                "SAM segmentation prerequisites not met."
+                "Ensure prompt image and drawing points are provided."
             )
 
         # Run segGPT Segmentation
@@ -313,9 +342,13 @@ class MainWindow(QMainWindow):
 
     def run_seggpt_segmentation(self):
         # seg_image should be generated from SAM and be required for segGPT
-        if len(self.segmented_prompt_images) < 1 or not self.prompt_display.pixmap():
+        if (
+            len(self.segmented_prompt_images) < 1
+            or not self.prompt_display.pixmap()
+        ):
             print(
-                "segGPT prerequisites not met. Ensure SAM segmentation is done and a prompt image is loaded."
+                "segGPT prerequisites not met."
+                "Ensure SAM segmentation is done and a prompt image is loaded."
             )
             return
 

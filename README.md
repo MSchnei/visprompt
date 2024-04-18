@@ -52,3 +52,19 @@ for sementation with segGPT, run:
 ```bash
 poetry run python visprompt/seggpt_inference/run_inference_seggpt_cli.py --input-image /path/to/input_image.png --prompt-images /path/to/prompt_image.png --prompt-targets /path/to/prompt_targets.png 
 ```
+
+## Contributing
+
+Contributions are welcome! Before submitting a PR, please run
+
+```shell
+make style
+```
+
+This will run `black`, `isort` and `flake8` on the code.
+
+Unit tests can be executed via
+
+```shell
+make test
+```

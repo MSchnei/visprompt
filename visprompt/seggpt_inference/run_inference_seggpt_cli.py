@@ -24,9 +24,9 @@ class SegGPTInference:
     @lru_cache(maxsize=None)
     def load_processor_and_model(self):
         self.processor = SegGptImageProcessor.from_pretrained(self.model_id)
-        self.model = SegGptForImageSegmentation.from_pretrained(self.model_id).to(
-            self.device
-        )
+        self.model = SegGptForImageSegmentation.from_pretrained(
+            self.model_id
+        ).to(self.device)
 
     def run_inference(
         self,
@@ -79,7 +79,9 @@ class SegGPTInference:
     "--prompt-targets",
     type=click.STRING,
     multiple=True,
-    default=["/Users/marianschneider/git/visprompt/examples/hmbb_1_target.png"],
+    default=[
+        "/Users/marianschneider/git/visprompt/examples/hmbb_1_target.png"
+    ],
     help="Segmentation prompt for prompt image",
 )
 @click.option(
@@ -88,7 +90,9 @@ class SegGPTInference:
     default=1,
     help="Image on which we specify segmentation task",
 )
-@click.option("--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu")
+@click.option(
+    "--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu"
+)
 @click.option(
     "--output_dir",
     type=click.STRING,
@@ -108,10 +112,12 @@ def run_inference_seggpt_cli(
     # Process images
     image = Image.open(input_image).convert("RGB")
     prompt_images = [
-        Image.open(prompt_image).convert("RGB") for prompt_image in prompt_images
+        Image.open(prompt_image).convert("RGB")
+        for prompt_image in prompt_images
     ]
     prompt_targets = [
-        Image.open(prompt_target).convert("RGB") for prompt_target in prompt_targets
+        Image.open(prompt_target).convert("RGB")
+        for prompt_target in prompt_targets
     ]
 
     inference_instance = SegGPTInference(model_id, num_labels, device)
@@ -122,9 +128,9 @@ def run_inference_seggpt_cli(
     )
 
     output = Image.fromarray(
-        (np.array(image) * (0.6 * mask.numpy()[:, :, np.newaxis] + 0.4)).astype(
-            np.uint8
-        )
+        (
+            np.array(image) * (0.6 * mask.numpy()[:, :, np.newaxis] + 0.4)
+        ).astype(np.uint8)
     )
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     out_path = Path(output_dir) / ("output_" + Path(input_image).stem + ".png")
