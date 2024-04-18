@@ -67,6 +67,7 @@ class SegGPTInference:
     help="Image for which we want to find segmentation mask",
 )
 @click.option(
+    "-pi",
     "--prompt-images",
     type=click.STRING,
     multiple=True,
@@ -74,6 +75,7 @@ class SegGPTInference:
     help="Image on which we specify segmentation task",
 )
 @click.option(
+    "-pt",
     "--prompt-targets",
     type=click.STRING,
     multiple=True,

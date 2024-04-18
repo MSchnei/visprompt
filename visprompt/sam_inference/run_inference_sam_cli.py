@@ -55,6 +55,7 @@ class SAMInference:
     help="Image on which we perform SAM segmentation",
 )
 @click.option(
+    "-p",
     "--input-points",
     default=[100, 150],
     multiple=True,
