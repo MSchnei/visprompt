@@ -22,7 +22,7 @@ def transform_points(
     return transformed
 
 
-def qimage_to_numpy_array(qimage):
+def qimage_to_numpy_array(qimage: QImage) -> np.ndarray:
     # Get image dimensions
     width = qimage.width()
     height = qimage.height()
@@ -30,6 +30,10 @@ def qimage_to_numpy_array(qimage):
 
     # Get pointer to the image data
     ptr = qimage.bits()
+
+    # Check if pointer is valid
+    if ptr is None:
+        raise ValueError("Invalid image data or unsupported image format.")
 
     # Convert to bytes (this step is important)
     bytearr = bytes(ptr)
