@@ -6,6 +6,7 @@ from PySide6.QtGui import QColor, QImage
 from visprompt.gui.gui_image_utils import (
     get_segmentation_image_from_sam,
     get_segmentation_image_from_seggpt,
+    numpy_array_to_qimage,
     qimage_to_numpy_array,
     transform_points,
 )
@@ -104,3 +105,46 @@ def test_qimage_to_numpy_array_unsupported_format():
     qimage = create_test_qimage(width, height, unsupported_format)
     with pytest.raises(ValueError):
         _ = qimage_to_numpy_array(qimage)
+
+
+@pytest.mark.parametrize(
+    "array, expected_exception, expected_message",
+    [
+        # Correct input, no exception expected
+        (np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8), None, None),
+        # Incorrect number of channels
+        (
+            np.random.randint(0, 256, (100, 100, 4), dtype=np.uint8),
+            AssertionError,
+            "Expected 3 channels but got 4",
+        ),
+        # Incorrect dtype
+        (
+            np.random.rand(100, 100, 3).astype(np.float32),
+            AssertionError,
+            "Expected dtype np.uint8 but got float32",
+        ),
+        # Incorrect dimensions
+        (
+            np.random.randint(0, 256, (100, 100), dtype=np.uint8),
+            ValueError,
+            "Input array must have 3 dimensions.",
+        ),
+    ],
+)
+def test_numpy_array_to_qimage_varied_cases(
+    array, expected_exception, expected_message
+):
+    if expected_exception:
+        with pytest.raises(expected_exception) as e:
+            qimage = numpy_array_to_qimage(array)
+        assert expected_message in str(
+            e.value
+        ), f"Should raise {expected_exception} with specific message"
+    else:
+        qimage = numpy_array_to_qimage(array)
+        # Check that the QImage was created with the correct properties
+        assert (
+            qimage.width() == array.shape[1] and qimage.height() == array.shape[0]
+        ), "Dimensions of the QImage should match the array"
+        assert qimage.format() == QImage.Format_RGB888, "Image format should be RGB888"
