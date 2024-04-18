@@ -1,9 +1,12 @@
+import numpy as np
 import pytest
 from PySide6.QtCore import QPoint
+from PySide6.QtGui import QColor, QImage
 
 from visprompt.gui.gui_image_utils import (
     get_segmentation_image_from_sam,
     get_segmentation_image_from_seggpt,
+    qimage_to_numpy_array,
     transform_points,
 )
 
@@ -61,3 +64,43 @@ def test_transform_points_zero_scale():
     points = [QPoint(10, 10), QPoint(20, 20)]
     with pytest.raises(ZeroDivisionError):
         transform_points(points, 0, 10, 10)
+
+
+def create_test_qimage(width, height, format):
+    image = QImage(width, height, format)
+    # Fill the image with a solid color for simplicity
+    color = QColor(128, 128, 128)  # Grey color
+    image.fill(color)
+    return image
+
+
+@pytest.mark.parametrize(
+    "image_format, expected_dtype, expected_channels",
+    [
+        (QImage.Format_RGB32, np.uint8, 3),  # Expect 3 channels after conversion to RGB
+        (QImage.Format_RGB888, np.uint8, 3),  # Direct 3 channels
+    ],
+)
+def test_qimage_to_numpy_array(image_format, expected_dtype, expected_channels):
+    width, height = 100, 100  # Example dimensions
+    qimage = create_test_qimage(width, height, image_format)
+    np_array = qimage_to_numpy_array(qimage)
+
+    assert np_array.dtype == expected_dtype, "Data type of numpy array should match"
+    assert np_array.shape == (
+        height,
+        width,
+        expected_channels,
+    ), "Shape of the numpy array should be (height, width, channels)"
+    # Check if the conversion retains the same color
+    assert np.all(
+        np_array == 128
+    ), "The image array should have all pixels set to the grey value used"
+
+
+def test_qimage_to_numpy_array_unsupported_format():
+    width, height = 100, 100
+    unsupported_format = QImage.Format_Invalid
+    qimage = create_test_qimage(width, height, unsupported_format)
+    with pytest.raises(ValueError):
+        _ = qimage_to_numpy_array(qimage)
