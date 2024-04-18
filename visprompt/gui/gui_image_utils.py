@@ -11,7 +11,9 @@ from visprompt.sam_inference.run_inference_sam_cli import SAMInference
 from visprompt.seggpt_inference.run_inference_seggpt_cli import SegGPTInference
 
 
-def transform_points(points, scale_factor, x_offset, y_offset):
+def transform_points(
+    points: List[QPoint], scale_factor: int, x_offset: int, y_offset: int
+) -> List[QPoint]:
     transformed = []
     for point in points:
         x = (point.x() - x_offset) / scale_factor
