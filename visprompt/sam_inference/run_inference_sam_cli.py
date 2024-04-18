@@ -21,7 +21,9 @@ class SAMInference:
     @lru_cache(maxsize=None)
     def load_processor_and_model(self):
         self.processor = SamProcessor.from_pretrained("facebook/sam-vit-large")
-        self.model = SamModel.from_pretrained("facebook/sam-vit-large").to(self.device)
+        self.model = SamModel.from_pretrained("facebook/sam-vit-large").to(
+            self.device
+        )
 
     def run_inference(
         self,
@@ -61,7 +63,9 @@ class SAMInference:
     multiple=True,
     help="Point prompt for the segmentation task",
 )
-@click.option("--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu")
+@click.option(
+    "--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu"
+)
 @click.option(
     "--output_dir",
     type=click.STRING,
@@ -88,11 +92,14 @@ def run_inference_sam_cli(
 
     output = Image.fromarray(
         (
-            np.array(image) * (0.6 * mask.squeeze().numpy()[0][:, :, np.newaxis] + 0.4)
+            np.array(image)
+            * (0.6 * mask.squeeze().numpy()[0][:, :, np.newaxis] + 0.4)
         ).astype(np.uint8)
     )
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    out_path = Path(output_dir) / ("output_" + Path(prompt_image).stem + ".png")
+    out_path = Path(output_dir) / (
+        "output_" + Path(prompt_image).stem + ".png"
+    )
     output.save(out_path)
 
 

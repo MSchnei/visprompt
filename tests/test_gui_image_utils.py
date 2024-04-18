@@ -4,8 +4,6 @@ from PySide6.QtCore import QPoint
 from PySide6.QtGui import QColor, QImage
 
 from visprompt.gui.gui_image_utils import (
-    get_segmentation_image_from_sam,
-    get_segmentation_image_from_seggpt,
     numpy_array_to_qimage,
     qimage_to_numpy_array,
     transform_points,
@@ -24,9 +22,21 @@ from visprompt.gui.gui_image_utils import (
             [QPoint(0, 0), QPoint(1, 1), QPoint(2, 2)],
         ),
         # Scaling
-        ([QPoint(10, 10), QPoint(20, 20)], 10, 0, 0, [QPoint(1, 1), QPoint(2, 2)]),
+        (
+            [QPoint(10, 10), QPoint(20, 20)],
+            10,
+            0,
+            0,
+            [QPoint(1, 1), QPoint(2, 2)],
+        ),
         # Translation
-        ([QPoint(10, 10), QPoint(20, 20)], 1, 10, 10, [QPoint(0, 0), QPoint(10, 10)]),
+        (
+            [QPoint(10, 10), QPoint(20, 20)],
+            1,
+            10,
+            10,
+            [QPoint(0, 0), QPoint(10, 10)],
+        ),
         # Combined scaling and translation
         (
             [QPoint(110, 110), QPoint(220, 220)],
@@ -50,14 +60,17 @@ def test_transform_points_varied_cases(
 ):
     transformed = transform_points(points, scale_factor, x_offset, y_offset)
     assert all(
-        t.x() == e.x() and t.y() == e.y() for t, e in zip(transformed, expected)
+        t.x() == e.x() and t.y() == e.y()
+        for t, e in zip(transformed, expected)
     ), "Points should be transformed as expected"
 
 
 # Test for an empty list of points
 def test_transform_points_empty_list():
     transformed = transform_points([], 5, 10, 10)
-    assert transformed == [], "Transforming an empty list should return an empty list"
+    assert (
+        transformed == []
+    ), "Transforming an empty list should return an empty list"
 
 
 # Test for zero scale factor, expecting an error
@@ -78,16 +91,24 @@ def create_test_qimage(width, height, format):
 @pytest.mark.parametrize(
     "image_format, expected_dtype, expected_channels",
     [
-        (QImage.Format_RGB32, np.uint8, 3),  # Expect 3 channels after conversion to RGB
+        (
+            QImage.Format_RGB32,
+            np.uint8,
+            3,
+        ),  # Expect 3 channels after conversion to RGB
         (QImage.Format_RGB888, np.uint8, 3),  # Direct 3 channels
     ],
 )
-def test_qimage_to_numpy_array(image_format, expected_dtype, expected_channels):
+def test_qimage_to_numpy_array(
+    image_format, expected_dtype, expected_channels
+):
     width, height = 100, 100  # Example dimensions
     qimage = create_test_qimage(width, height, image_format)
     np_array = qimage_to_numpy_array(qimage)
 
-    assert np_array.dtype == expected_dtype, "Data type of numpy array should match"
+    assert (
+        np_array.dtype == expected_dtype
+    ), "Data type of numpy array should match"
     assert np_array.shape == (
         height,
         width,
@@ -145,6 +166,9 @@ def test_numpy_array_to_qimage_varied_cases(
         qimage = numpy_array_to_qimage(array)
         # Check that the QImage was created with the correct properties
         assert (
-            qimage.width() == array.shape[1] and qimage.height() == array.shape[0]
+            qimage.width() == array.shape[1]
+            and qimage.height() == array.shape[0]
         ), "Dimensions of the QImage should match the array"
-        assert qimage.format() == QImage.Format_RGB888, "Image format should be RGB888"
+        assert (
+            qimage.format() == QImage.Format_RGB888
+        ), "Image format should be RGB888"
