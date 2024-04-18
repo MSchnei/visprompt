@@ -71,7 +71,7 @@ def qimage_to_numpy_array(qimage: QImage) -> np.ndarray:
     return arr
 
 
-def numpy_array_to_qimage(array):
+def numpy_array_to_qimage(array: np.ndarray) -> QImage:
     # Ensure the array is shaped correctly
     if len(array.shape) == 3:
         assert array.shape[2] == 3, f"Expected 3 channels but got {array.shape[2]}"
