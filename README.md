@@ -22,24 +22,6 @@ poetry shell
 poetry install
 ```
 
-We need to install detectron2 using pip because there is no build for macOS available on pypi:
-```bash
-poetry run python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
-```
-Likewise, we need to install SAM:
-```bash
-poetry run python -m pip install 'git+https://github.com/facebookresearch/segment-anything.git'
-```
-
-We also need to download the SAM and segGPT models:
-```bash
-mkdir models && cd models
-# SAM model
-wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth
-# segGPT model
-wget https://huggingface.co/BAAI/SegGPT/resolve/main/seggpt_vit_large.pth
-```
-
 ## How to use
 
 There are two modes in which you can use this package:
@@ -48,21 +30,25 @@ There are two modes in which you can use this package:
 
 ### GUI
 To start the GUI, run:
-```python
+```bash
 poetry run python visprompt/gui/image_drawer.py
 ```
+
 Then
-- drop one or several image(s) for sam sementation in the top-left window and draw a prompt per image
-- drop one or several image(s) for segGPT sementation in the bottom-left window panel
+- drop one or several image(s) for sam segmentation in the top-left window and draw a prompt per image
+- drop one or several image(s) for segGPT segmentation in the bottom-left window panel
 - click the `Submit` button
+
+Running the application for the first time might take a while, since we need to download the models for huggingface hub.
+
 
 ### Command line
 for segmentation with SAM, run:
-```python
-poetry run python visprompt/sam_inference/run_inference_sam_cli.py
+```bash
+poetry run python visprompt/sam_inference/run_inference_sam_cli.py --prompt-image /path/to/prompt_image.png -p 100 - p 150
 ```
 
 for sementation with segGPT, run:
-```python
-poetry run python visprompt/seggpt_inference/run_inference_seggpt_cli.py
+```bash
+poetry run python visprompt/seggpt_inference/run_inference_seggpt_cli.py --input-image /path/to/input_image.png --prompt-images /path/to/prompt_image.png --prompt-targets /path/to/prompt_targets.png 
 ```
