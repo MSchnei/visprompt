@@ -12,8 +12,10 @@ click = "*"
 numpy = "*"
 pillow = "*"
 opencv-python-headless = "*"
+torchvision = "*"
 torch = "*"
 transformers = "*"
+pyzmq = "26.0.0" # pin version because latest release is broken
 
 [tool.poetry.dev-dependencies]
 black = "*"
