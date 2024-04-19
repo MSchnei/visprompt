@@ -4,6 +4,7 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -194,6 +195,10 @@ class MainWindow(QMainWindow):
         control_buttons.addWidget(self.clear_button)
         main_layout.addLayout(control_buttons)
 
+        self.save_button = QPushButton("Save")
+        self.save_button.clicked.connect(self.save_result_image)
+        main_layout.addWidget(self.save_button)
+
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
         # Connect the new Signal to an appropriate slot function
@@ -362,6 +367,27 @@ class MainWindow(QMainWindow):
                 self.segmented_images[self.user_img_display.current_index]
             )
         )
+
+    def save_result_image(self):
+        if (
+            not self.result_display.pixmap()
+            or self.result_display.pixmap().isNull()
+        ):
+            print("No image to save.")
+            return
+
+        # Opens a dialog to save the file
+        options = QFileDialog.Options()
+        filePath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Image",
+            "",
+            "PNG Files (*.png);;JPEG Files (*.jpeg);;All Files (*)",
+            options=options,
+        )
+        if filePath:
+            self.result_display.pixmap().save(filePath)
+            print(f"Image saved to {filePath}.")
 
     def clear_all(self):
         self.prompt_display.clear()
