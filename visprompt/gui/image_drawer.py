@@ -4,6 +4,7 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -42,6 +43,8 @@ class ImageDisplay(QLabel):
         self.setAcceptDrops(allow_drops)
         self.allow_drawing = allow_drawing
         self.background_text = background_text
+        # List to store original sizes of input images
+        self.original_sizes = []
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls():
@@ -55,6 +58,7 @@ class ImageDisplay(QLabel):
         if pixmap.isNull():
             print("Failed to load image.")
         else:
+            self.original_sizes.append(pixmap.size())
             pixmap = pixmap.scaled(
                 self.width(), self.height(), Qt.KeepAspectRatio
             )
@@ -184,15 +188,19 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(button_layout)
         main_layout.insertLayout(1, prompt_button_layout)
 
-        self.submit_button = QPushButton("Submit")
+        self.submit_button = QPushButton("Run Segmentation")
         self.submit_button.clicked.connect(self.process_images)
-        self.clear_button = QPushButton("Clear")
+        self.clear_button = QPushButton("Clear All")
         self.clear_button.clicked.connect(self.clear_all)
 
         control_buttons = QHBoxLayout()
         control_buttons.addWidget(self.submit_button)
         control_buttons.addWidget(self.clear_button)
         main_layout.addLayout(control_buttons)
+
+        self.save_button = QPushButton("Save Segmented Test Image")
+        self.save_button.clicked.connect(self.save_result_image)
+        main_layout.addWidget(self.save_button)
 
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
@@ -363,28 +371,73 @@ class MainWindow(QMainWindow):
             )
         )
 
+    def save_result_image(self):
+        if (
+            not self.result_display.pixmap()
+            or self.result_display.pixmap().isNull()
+        ):
+            print("No image to save.")
+            return
+
+        current_index = self.user_img_display.current_index
+        if current_index < 0 or current_index >= len(
+            self.user_img_display.original_sizes
+        ):
+            print("Invalid image index or original size not available.")
+            return
+
+        original_size = self.user_img_display.original_sizes[current_index]
+        # Use IgnoreAspectRatio to match the original dimensions
+        scaled_pixmap = self.result_display.pixmap().scaled(
+            original_size, Qt.IgnoreAspectRatio, Qt.SmoothTransformation
+        )
+
+        options = QFileDialog.Options()
+        filePath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Image",
+            "",
+            "PNG Files (*.png);;JPEG Files (*.jpeg);;All Files (*)",
+            options=options,
+        )
+        if filePath:
+            scaled_pixmap.save(filePath)
+            print(f"Image saved to {filePath}.")
+
     def clear_all(self):
-        self.prompt_display.clear()
-        self.segment_display.clear()
-        self.user_img_display.clear()
-        self.result_display.clear()
-
-        self.prompt_display.points = []
-        self.prompt_display.image_list = []
-        self.user_img_display.image_list = []
+        # Clear data for prompt_display
+        self.prompt_display.image_list.clear()
+        self.prompt_display.points.clear()
+        self.prompt_display.original_sizes.clear()
+        self.prompt_display.setPixmap(QPixmap())
         self.prompt_display.current_index = -1
-        self.segment_display.current_index = -1
-        self.user_img_display.current_index = -1
-        self.result_display.current_index = -1
 
+        # Clear data for user_img_display
+        self.user_img_display.image_list.clear()
+        self.user_img_display.points.clear()
+        self.user_img_display.original_sizes.clear()
+        self.user_img_display.setPixmap(QPixmap())
+        self.user_img_display.current_index = -1
+
+        # Clear data for result_display and segment_display if necessary
+        self.result_display.setPixmap(QPixmap())
+        self.result_display.current_index = -1
+        self.segment_display.setPixmap(QPixmap())
+        self.segment_display.current_index = -1
+
+        # Clear lists that store processed or segmented images
+        self.segmented_prompt_images.clear()
+        self.segmented_images.clear()
+
+        # Update UI elements, such as disabling buttons
         self.prev_prompt_button.setEnabled(False)
         self.next_prompt_button.setEnabled(False)
         self.prev_button.setEnabled(False)
         self.next_button.setEnabled(False)
+
+        # Refresh navigation buttons status based on cleared data
         self.update_prompt_navigation_buttons()
         self.update_navigation_buttons()
-        self.segmented_prompt_images = []
-        self.segmented_images = []
 
 
 if __name__ == "__main__":
