@@ -188,9 +188,9 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(button_layout)
         main_layout.insertLayout(1, prompt_button_layout)
 
-        self.submit_button = QPushButton("Submit")
+        self.submit_button = QPushButton("Run Segmentation")
         self.submit_button.clicked.connect(self.process_images)
-        self.clear_button = QPushButton("Clear")
+        self.clear_button = QPushButton("Clear All")
         self.clear_button.clicked.connect(self.clear_all)
 
         control_buttons = QHBoxLayout()
