@@ -10,13 +10,13 @@ https://github.com/MSchnei/visprompt/assets/15090072/3243cd79-7373-48f3-a45d-b0c
 ## Installation
 
 First, clone the project by running:
-```bash
+```shell
 cd /home/folder/git/
 git clone https://github.com/MSchnei/visprompt.git
 ```
 
 Then set up a poetry environment by running:
-```bash 
+```shell 
 cd /home/folder/git/visprompt/
 poetry shell
 poetry install
@@ -30,8 +30,8 @@ There are two modes in which you can use this package:
 
 ### GUI
 To start the GUI, run:
-```bash
-poetry run python visprompt/gui/image_drawer.py
+```shell
+poetry run task gui
 ```
 
 Then
@@ -44,18 +44,18 @@ Running the application for the first time might take a while, since we need to 
 
 ### Command line
 for segmentation with SAM, run:
-```bash
-poetry run python visprompt/sam_inference/run_inference_sam_cli.py --prompt-image /path/to/prompt_image.png -p 100 - p 150
+```shell
+poetry run task inference_sam --prompt-image /path/to/prompt_image.png -p 100 - p 150
 ```
 
 for sementation with segGPT, run:
-```bash
-poetry run python visprompt/seggpt_inference/run_inference_seggpt_cli.py --input-image /path/to/input_image.png --prompt-images /path/to/prompt_image.png --prompt-targets /path/to/prompt_targets.png 
+```shell
+poetry run task inference_seggpt --input-image /path/to/input_image.png --prompt-images /path/to/prompt_image.png --prompt-targets /path/to/prompt_targets.png 
 ```
 
 ## Contributing
 
-Contributions are welcome! Before submitting a PR, please run
+Contributions are welcome! Before submitting a PR, please run:
 
 ```shell
 make style
