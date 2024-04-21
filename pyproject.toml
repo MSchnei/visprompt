@@ -6,7 +6,7 @@ authors = ["mschnei"]
 packages = [ {include = "visprompt"} ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<3.12"
 opencv-contrib-python-headless = "*"
 click = "*"
 numpy = "*"
