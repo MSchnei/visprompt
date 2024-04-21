@@ -7,8 +7,8 @@ from PySide6.QtCore import QPoint
 from PySide6.QtGui import QImage, QPixmap
 from tqdm import tqdm
 
-from visprompt.sam_inference.run_inference_sam_cli import SAMInference
-from visprompt.seggpt_inference.run_inference_seggpt_cli import SegGPTInference
+from visprompt.segmentation.run_inference_sam_cli import SAMInference
+from visprompt.segmentation.run_inference_seggpt_cli import SegGPTInference
 
 
 def transform_points(

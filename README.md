@@ -9,53 +9,101 @@ https://github.com/MSchnei/visprompt/assets/15090072/3243cd79-7373-48f3-a45d-b0c
 
 ## Installation
 
+There are two ways in which you can install this repository:
+1. standalone
+2. add as a dependency in your poetry project
+
+### Standalone
 First, clone the project by running:
-```bash
+```shell
 cd /home/folder/git/
 git clone https://github.com/MSchnei/visprompt.git
 ```
 
 Then set up a poetry environment by running:
-```bash 
+```shell 
 cd /home/folder/git/visprompt/
 poetry shell
 poetry install
 ```
 
-## How to use
-
-There are two modes in which you can use this package:
-1. run and visualise segmentations via the GUI 
-2. run sam and segGPT segmentation via commmand line
-
-### GUI
-To start the GUI, run:
+### As a dependency
+To add visprompt as a dependency to your poetry project, simply run:
 ```bash
-poetry run python visprompt/gui/image_drawer.py
+poetry add visprompt
 ```
 
-Then
+## How to use
+
+There are two modes in which you can use visprompt:
+1. run and visualise segmentations via the GUI 
+2. run SAM and segGPT segmentation via commmand line
+
+### Segmentation via GUI
+To start the GUI from your terminal, run:
+```shell
+poetry run task gui
+```
+
+Alternatively, to start the GUI from a python shell, run:
+```python
+from visprompt import run_gui
+
+run_gui()
+```
+
+Once the GUI opens
 - drop one or several image(s) for sam segmentation in the top-left window and draw a prompt per image
 - drop one or several image(s) for segGPT segmentation in the bottom-left window panel
 - click the `Submit` button
 
-Running the application for the first time might take a while, since we need to download the models for huggingface hub.
+Running the application for the first time might take a while, since we need to download the models from the huggingface hub.
 
 
-### Command line
-for segmentation with SAM, run:
-```bash
-poetry run python visprompt/sam_inference/run_inference_sam_cli.py --prompt-image /path/to/prompt_image.png -p 100 - p 150
+### Segmentation via CLI
+To run a SAM segmentation from your terminal, run the following:
+```shell
+poetry run task inference_sam --prompt-image /path/to/prompt_image.png -p 100 - p 150
 ```
 
-for sementation with segGPT, run:
-```bash
-poetry run python visprompt/seggpt_inference/run_inference_seggpt_cli.py --input-image /path/to/input_image.png --prompt-images /path/to/prompt_image.png --prompt-targets /path/to/prompt_targets.png 
+To run a segGPT segmentation from your terminal, run
+```shell
+poetry run task inference_seggpt --input-image /path/to/input_image.png --prompt-images /path/to/prompt_image.png --prompt-targets /path/to/prompt_targets.png 
+```
+
+Alternatively, run the below from a python shell:
+```python
+from PIL import Image
+from visprompt import SAMInference, SegGPTInference
+
+# Set prompt_image and input_points for SAM segmentation
+prompt_image = Image.open("/path/to/prompt_image.png").convert("RGB")
+input_points = [[[100, 150]]]
+
+# Run SAM segmentation
+inference_instance = SAMInference()
+mask = inference_instance.run_inference(
+    prompt_image=prompt_image,
+    input_points=input_points,
+)
+
+# Set input_image, prompt_images and prompt_targets for SegGPT segmentation
+input_image = Image.open("/path/to/input_image.png").convert("RGB")
+prompt_images = [Image.open("/path/to/prompt_image.png").convert("RGB")]
+prompt_targets = [Image.open("/path/to/prompt_target.png").convert("RGB")]
+
+# Run SegGPT segmentation
+inference_instance = SegGPTInference(num_labels=1)
+mask = inference_instance.run_inference(
+    input_image=input_image,
+    prompt_images=prompt_images,
+    prompt_targets=prompt_targets,
+)
 ```
 
 ## Contributing
 
-Contributions are welcome! Before submitting a PR, please run
+Contributions are welcome! Before submitting a PR, please run:
 
 ```shell
 make style

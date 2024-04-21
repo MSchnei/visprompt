@@ -48,13 +48,13 @@ class SAMInference:
     "--model-id",
     type=click.STRING,
     default="facebook/sam-vit-large",
-    help="Model ID on huggingface",
+    help="Model ID on huggingface, optional",
 )
 @click.option(
     "--prompt-image",
     type=click.STRING,
-    default="/Users/marianschneider/git/visprompt/examples/hmbb_1.jpg",
-    help="Image on which we perform SAM segmentation",
+    default="visprompt/examples/hmbb_1.jpg",
+    help="Image for which we want to find segmentation mask",
 )
 @click.option(
     "-p",
@@ -64,12 +64,16 @@ class SAMInference:
     help="Point prompt for the segmentation task",
 )
 @click.option(
-    "--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu"
+    "--device",
+    type=click.Choice(["cuda", "cpu", "mps"]),
+    default="cpu",
+    help="Device type to which model and model inputs will be allocated",
 )
 @click.option(
     "--output_dir",
     type=click.STRING,
     default="output_dir",
+    help="Directory where result of the segmentation task will be saved",
 )
 def run_inference_sam_cli(
     model_id: str,

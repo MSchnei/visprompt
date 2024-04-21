@@ -20,6 +20,13 @@ from visprompt.gui.gui_image_utils import (
 )
 
 
+def run_gui():
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
+
+
 class ImageDisplay(QLabel):
     image_dropped = Signal()  # Create a new Signal
 
@@ -441,7 +448,4 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    run_gui()

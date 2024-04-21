@@ -58,12 +58,12 @@ class SegGPTInference:
     "--model-id",
     type=click.STRING,
     default="BAAI/seggpt-vit-large",
-    help="Model ID on huggingface",
+    help="Model ID on huggingface, optional",
 )
 @click.option(
     "--input-image",
     type=click.STRING,
-    default="/Users/marianschneider/git/visprompt/examples/hmbb_2.jpg",
+    default="visprompt/examples/hmbb_2.jpg",
     help="Image for which we want to find segmentation mask",
 )
 @click.option(
@@ -71,7 +71,7 @@ class SegGPTInference:
     "--prompt-images",
     type=click.STRING,
     multiple=True,
-    default=["/Users/marianschneider/git/visprompt/examples/hmbb_1.jpg"],
+    default=["visprompt/examples/hmbb_1.jpg"],
     help="Image on which we specify segmentation task",
 )
 @click.option(
@@ -79,24 +79,26 @@ class SegGPTInference:
     "--prompt-targets",
     type=click.STRING,
     multiple=True,
-    default=[
-        "/Users/marianschneider/git/visprompt/examples/hmbb_1_target.png"
-    ],
-    help="Segmentation prompt for prompt image",
+    default=["visprompt/examples/hmbb_1_target.png"],
+    help="Segmentation target for prompt image",
 )
 @click.option(
     "--num-labels",
     type=click.INT,
     default=1,
-    help="Image on which we specify segmentation task",
+    help="Number of labels in the segmentation task",
 )
 @click.option(
-    "--device", type=click.Choice(["cuda", "cpu", "mps"]), default="cpu"
+    "--device",
+    type=click.Choice(["cuda", "cpu", "mps"]),
+    default="cpu",
+    help="Device type to which model and model inputs will be allocated",
 )
 @click.option(
     "--output_dir",
     type=click.STRING,
     default="output_dir",
+    help="Directory where result of the segmentation task will be saved",
 )
 def run_inference_seggpt_cli(
     model_id: str,
