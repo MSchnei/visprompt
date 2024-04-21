@@ -1,4 +1,4 @@
-name: Install dependencies, lint, and test
+name: Build, test and publish
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build_and_test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -18,14 +18,9 @@ jobs:
         python-version: [ "3.8", "3.9", "3.10", "3.11" ]
 
     steps:
-      #----------------------------------------------
-      #              install libegl1
-      #----------------------------------------------
       - name: Install libegl1
         run: sudo apt-get install -y libegl1
-      #----------------------------------------------
-      #       check-out repo and set-up python
-      #----------------------------------------------
+
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Set up python
@@ -33,38 +28,28 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      #----------------------------------------------
-      #           install & configure poetry
-      #----------------------------------------------
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
+
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
+
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
-      #----------------------------------------------
-      # install your root project, if required
-      #----------------------------------------------
+
       - name: Install project
         run: poetry install --no-interaction
-      #----------------------------------------------
-      #              run linting
-      #----------------------------------------------
+
       - name: Lint with isort, black and flake8
         run: |
           poetry run isort visprompt
@@ -74,12 +59,53 @@ jobs:
           poetry run flake8 visprompt
           poetry run flake8 tests
         continue-on-error: true
-      #----------------------------------------------
-      #              run test suite
-      #----------------------------------------------
+
       - name: Test with pytest
         run: |
           poetry run coverage erase
           poetry run coverage run -a --source=./visprompt --branch -m pytest -s -v --black --isort tests --junit-xml=junit/test-results-${{ matrix.python-version }}.xml
           poetry run coverage report
           poetry run coverage xml
+
+  publish:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.x-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Publish to PyPI
+        run: echo "This is where we would publish to pypi"
+#        env:
+#          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+#          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+#        run: |
+#          poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+#          poetry publish --build
