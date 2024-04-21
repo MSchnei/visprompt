@@ -13,6 +13,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
 
     steps:
       #----------------------------------------------
@@ -29,7 +32,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
       #----------------------------------------------
       #           install & configure poetry
       #----------------------------------------------
@@ -77,6 +80,6 @@ jobs:
       - name: Test with pytest
         run: |
           poetry run coverage erase
-          poetry run coverage run -a --source=./visprompt --branch -m pytest -s -v --black --isort tests --junit-xml unit_results.xml
+          poetry run coverage run -a --source=./visprompt --branch -m pytest -s -v --black --isort tests --junit-xml=junit/test-results-${{ matrix.python-version }}.xml
           poetry run coverage report
           poetry run coverage xml
