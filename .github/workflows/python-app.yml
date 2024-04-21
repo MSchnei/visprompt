@@ -16,6 +16,11 @@ jobs:
 
     steps:
       #----------------------------------------------
+      #              install libegl1
+      #----------------------------------------------
+      - name: Install libegl1
+        run: sudo apt-get install -y libegl1
+      #----------------------------------------------
       #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
@@ -26,7 +31,7 @@ jobs:
         with:
           python-version: '3.9'
       #----------------------------------------------
-      #  -----  install & configure poetry  -----
+      #           install & configure poetry
       #----------------------------------------------
       - name: Install Poetry
         uses: snok/install-poetry@v1
