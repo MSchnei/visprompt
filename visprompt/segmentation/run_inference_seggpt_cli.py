@@ -63,7 +63,7 @@ class SegGPTInference:
 @click.option(
     "--input-image",
     type=click.STRING,
-    default="visprompt/examples/hmbb_2.jpg",
+    default="visprompt/examples/image_01.png",
     help="Image for which we want to find segmentation mask",
 )
 @click.option(
@@ -71,7 +71,7 @@ class SegGPTInference:
     "--prompt-images",
     type=click.STRING,
     multiple=True,
-    default=["visprompt/examples/hmbb_1.jpg"],
+    default=["visprompt/examples/image_02.png"],
     help="Image on which we specify segmentation task",
 )
 @click.option(
@@ -79,7 +79,7 @@ class SegGPTInference:
     "--prompt-targets",
     type=click.STRING,
     multiple=True,
-    default=["visprompt/examples/hmbb_1_target.png"],
+    default=["visprompt/examples/target_02.png"],
     help="Segmentation target for prompt image",
 )
 @click.option(
