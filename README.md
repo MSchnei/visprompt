@@ -3,7 +3,7 @@ Welcome to *visprompt*, a repository and basic GUI for experimenting with visual
 
 If you would like to learn more about visual prompting, please check out [the website accompanying this project](https://mschnei.github.io/visprompt/). 
 
-Current version: 0.1.0
+Current version: 0.1.1
 
 https://github.com/MSchnei/visprompt/assets/15090072/3243cd79-7373-48f3-a45d-b0caf8b7e6c0
 
