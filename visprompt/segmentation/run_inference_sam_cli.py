@@ -53,7 +53,7 @@ class SAMInference:
 @click.option(
     "--prompt-image",
     type=click.STRING,
-    default="visprompt/examples/hmbb_1.jpg",
+    default="visprompt/examples/image_01.pg",
     help="Image for which we want to find segmentation mask",
 )
 @click.option(
