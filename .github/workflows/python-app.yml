@@ -2,7 +2,7 @@ name: Build, test and publish
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "fix-publish-action" ]
   pull_request:
     branches: [ "main" ]
 
@@ -82,6 +82,7 @@ jobs:
         run: |
           PR_TITLE=$(jq --raw-output .pull_request.title "$GITHUB_EVENT_PATH")
           VERSION_PATTERN="^Bump version: [0-9]+\.[0-9]+\.[0-9]+ → [0-9]+\.[0-9]+\.[0-9]+$"
+          echo "$PR_TITLE"
           if [[ "$PR_TITLE" =~ $VERSION_PATTERN ]]; then
             echo "Valid PR title for publishing."
             echo "::set-output name=should_publish::true"
