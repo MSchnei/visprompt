@@ -80,7 +80,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_TITLE=$(jq --raw-output .pull_request.title "$GITHUB_EVENT_PATH")
+          PR_TITLE="${{ github.event.pull_request.title }}"
           VERSION_PATTERN="^Bump version: [0-9]+\.[0-9]+\.[0-9]+ → [0-9]+\.[0-9]+\.[0-9]+$"
           echo "PR_TITLE: $$PR_TITLE"
           echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
