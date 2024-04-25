@@ -80,9 +80,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_TITLE="${{ github.event.pull_request }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
           VERSION_PATTERN="^Bump version: [0-9]+\.[0-9]+\.[0-9]+ → [0-9]+\.[0-9]+\.[0-9]+$"
-          echo "PR_TITLE: $$PR_TITLE"
+          echo "PR_TITLE: $PR_TITLE"
           echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
           if [[ "$PR_TITLE" =~ $VERSION_PATTERN ]]; then
             echo "Valid PR title for publishing."
