@@ -70,7 +70,7 @@ jobs:
   publish:
     needs: build_and_test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' && github.ref == 'refs/heads/publish-version-change'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
