@@ -68,7 +68,7 @@ jobs:
           poetry run coverage xml
 
   check_version_change:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       should_publish: ${{ steps.compare_versions.outputs.should_publish }}
@@ -82,24 +82,14 @@ jobs:
         run: |
           git fetch --depth=2 origin main:refs/remotes/origin/main
 
-      - name: Get version from pyproject.toml in PR
-        id: pr_version
-        run: |
-          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "PR version: $PR_VERSION"
-          echo "::set-output name=pr_version::$PR_VERSION"
-
-      - name: Get version from pyproject.toml in main
-        id: main_version
-        run: |
-          git checkout refs/remotes/origin/main
-          MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "Main version: $MAIN_VERSION"
-          echo "::set-output name=main_version::$MAIN_VERSION"
-
       - name: Compare versions and set flag
         id: compare_versions
         run: |
+          MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "Main version: $MAIN_VERSION"
+          git checkout ${{ github.event.pull_request.base.sha }}
+          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "PR version: $PR_VERSION"
           if [[ "$MAIN_VERSION" != "$PR_VERSION" ]]; then
             echo "Version changed from $MAIN_VERSION to $PR_VERSION."
             echo "::set-output name=should_publish::true"
@@ -110,7 +100,7 @@ jobs:
 
   publish:
     needs: [build_and_test, check_version_change]
-    if: needs.check_version_change.outputs.should_publish == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: needs.check_version_change.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
