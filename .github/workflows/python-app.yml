@@ -75,11 +75,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for all branches and tags
+          fetch-depth: 2
 
       - name: Fetch main branch
         run: |
-          git fetch origin main:main
+          git fetch origin main:main --depth=1
 
       - name: Get version from pyproject.toml in PR
         id: pr_version
