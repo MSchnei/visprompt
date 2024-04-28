@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "visprompt"
 version = "0.1.2"
-description = ""
+description = "Repository and basic GUI for experimenting with visual prompting based on SAM and segGPT."
 authors = ["mschnei"]
+homepage = "https://github.com/MSchnei/visprompt"
 packages = [ {include = "visprompt"} ]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"

@@ -74,32 +74,47 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-      - name: Check PR Title
-        id: check_title
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch main branch
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          echo "PR_TITLE: $PR_TITLE"
-          VERSION_PATTERN="^Bump version: [0-9]+\.[0-9]+\.[0-9]+ → [0-9]+\.[0-9]+\.[0-9]+$"
-          if [[ "$PR_TITLE" =~ $VERSION_PATTERN ]]; then
-            echo "Valid PR title for publishing."
+          git fetch origin main:main --depth=1
+
+      - name: Get version from pyproject.toml in PR
+        id: pr_version
+        run: |
+          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "PR version: $PR_VERSION"
+          echo "::set-output name=pr_version::$PR_VERSION"
+
+      - name: Get version from pyproject.toml in main
+        id: main_version
+        run: |
+          git checkout main
+          MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "Main version: $MAIN_VERSION"
+          echo "::set-output name=main_version::$MAIN_VERSION"
+
+      - name: Compare versions and set flag
+        run: |
+          if [[ "${{ steps.pr_version.outputs.pr_version }}" != "${{ steps.main_version.outputs.main_version }}" ]]; then
+            echo "Version changed from ${{ steps.main_version.outputs.main_version }} to ${{ steps.pr_version.outputs.pr_version }}."
             echo "::set-output name=should_publish::true"
           else
-            echo "PR title does not match the required format for publishing."
+            echo "No version change detected."
             echo "::set-output name=should_publish::false"
           fi
 
       - name: Set up python
-        if: steps.check_title.outputs.should_publish == 'true'
+        if: steps.check_version_change.outputs.should_publish == 'true'
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        if: steps.check_title.outputs.should_publish == 'true'
+        if: steps.check_version_change.outputs.should_publish == 'true'
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
@@ -107,22 +122,22 @@ jobs:
           installer-parallel: true
 
       - name: Load cached venv
-        if: steps.check_title.outputs.should_publish == 'true'
+        if: steps.check_version_change.outputs.should_publish == 'true'
         uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-3.x-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        if: steps.check_title.outputs.should_publish == 'true' && steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        if: steps.check_version_change.outputs.should_publish == 'true' && steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
       - name: Install project
-        if: steps.check_title.outputs.should_publish == 'true'
+        if: steps.check_version_change.outputs.should_publish == 'true'
         run: poetry install --no-interaction
 
       - name: Publish to PyPI
-        if: steps.check_title.outputs.should_publish == 'true'
+        if: steps.check_version_change.outputs.should_publish == 'true'
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: |
