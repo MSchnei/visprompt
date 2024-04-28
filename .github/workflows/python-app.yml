@@ -70,6 +70,8 @@ jobs:
   check_version:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.compare_versions.outputs.should_publish }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -80,32 +82,35 @@ jobs:
         run: |
           git fetch --depth=2 origin main:refs/remotes/origin/main
 
+      - name: Get version from pyproject.toml in PR
+        id: pr_version
+        run: |
+          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "PR version: $PR_VERSION"
+          echo "::set-output name=pr_version::$PR_VERSION"
+
       - name: Get version from pyproject.toml in main
+        id: main_version
         run: |
           git checkout refs/remotes/origin/main
           MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
           echo "Main version: $MAIN_VERSION"
-          echo "Main version: $MAIN_VERSION" >> $GITHUB_ENV
-
-      - name: Checkout PR branch and get version
-        run: |
-          git checkout ${{ github.head_ref }}
-          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "PR version: $PR_VERSION"
-          echo "PR_VERSION=$PR_VERSION" >> $GITHUB_ENV
+          echo "::set-output name=main_version::$MAIN_VERSION"
 
       - name: Compare versions and set flag
+        id: compare_versions
         run: |
           if [[ "$MAIN_VERSION" != "$PR_VERSION" ]]; then
             echo "Version changed from $MAIN_VERSION to $PR_VERSION."
-            echo "SHOULD_PUBLISH=true" >> $GITHUB_ENV
+            echo "::set-output name=should_publish::true"
           else
             echo "No version change detected."
-            echo "SHOULD_PUBLISH=false" >> $GITHUB_ENV
+            echo "::set-output name=should_publish::false"
+          fi
 
   publish:
     needs: [build_and_test, check_version]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.SHOULD_PUBLISH == 'true'
+    if: needs.check_version.outputs.should_publish == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
