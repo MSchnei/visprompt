@@ -67,54 +67,57 @@ jobs:
           poetry run coverage report
           poetry run coverage xml
 
-  publish:
-    needs: build_and_test
+  check_version:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Check out PR branch
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
       - name: Fetch main branch
         run: |
-          git fetch --depth=1 origin main:refs/remotes/origin/main
-
-      - name: Get version from pyproject.toml in PR
-        id: pr_version
-        run: |
-          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "PR version: $PR_VERSION"
-          echo "::set-output name=pr_version::$PR_VERSION"
+          git fetch --depth=2 origin main:refs/remotes/origin/main
 
       - name: Get version from pyproject.toml in main
-        id: main_version
         run: |
           git checkout refs/remotes/origin/main
           MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
           echo "Main version: $MAIN_VERSION"
-          echo "::set-output name=main_version::$MAIN_VERSION"
+          echo "Main version: $MAIN_VERSION" >> $GITHUB_ENV
+
+      - name: Checkout PR branch and get version
+        run: |
+          git checkout ${{ github.head_ref }}
+          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "PR version: $PR_VERSION"
+          echo "PR_VERSION=$PR_VERSION" >> $GITHUB_ENV
 
       - name: Compare versions and set flag
         run: |
-          if [[ "${{ steps.pr_version.outputs.pr_version }}" != "${{ steps.main_version.outputs.main_version }}" ]]; then
-            echo "Version changed from ${{ steps.main_version.outputs.main_version }} to ${{ steps.pr_version.outputs.pr_version }}."
-            echo "::set-output name=should_publish::true"
+          if [[ "$MAIN_VERSION" != "$PR_VERSION" ]]; then
+            echo "Version changed from $MAIN_VERSION to $PR_VERSION."
+            echo "SHOULD_PUBLISH=true" >> $GITHUB_ENV
           else
             echo "No version change detected."
-            echo "::set-output name=should_publish::false"
-          fi
+            echo "SHOULD_PUBLISH=false" >> $GITHUB_ENV
+
+  publish:
+    needs: [build_and_test, check_version]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.SHOULD_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up python
-        if: steps.check_version_change.outputs.should_publish == 'true'
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        if: steps.check_version_change.outputs.should_publish == 'true'
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
@@ -122,22 +125,19 @@ jobs:
           installer-parallel: true
 
       - name: Load cached venv
-        if: steps.check_version_change.outputs.should_publish == 'true'
         uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-3.x-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        if: steps.check_version_change.outputs.should_publish == 'true' && steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
       - name: Install project
-        if: steps.check_version_change.outputs.should_publish == 'true'
         run: poetry install --no-interaction
 
       - name: Publish to PyPI
-        if: steps.check_version_change.outputs.should_publish == 'true'
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: |
