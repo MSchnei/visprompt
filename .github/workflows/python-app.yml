@@ -80,10 +80,24 @@ jobs:
       - name: Check for version change in pyproject.toml
         id: check_version_change
         run: |
-          OLD_VERSION=$(git diff HEAD^ HEAD -- pyproject.toml | grep -Po '(?<=version = ")[^"]*')
+          git fetch --depth=2
+      
+          OLD_VERSION=$(git diff HEAD^ HEAD -- pyproject.toml | grep -Po '(?<=version = ")[^"]*') || echo "Failed to get old version"
           echo "old version: $OLD_VERSION"
-          NEW_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          if [[ "$OLD_VERSION" == "Failed to get old version" ]]; then
+            echo "Error in extracting OLD_VERSION; assuming first commit or error in command"
+            echo "::set-output name=should_publish::false"
+            exit 0  # Exit safely to prevent CI failure
+          fi
+      
+          NEW_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml) || echo "Failed to get new version"
           echo "new version: $NEW_VERSION"
+          if [[ "$NEW_VERSION" == "Failed to get new version" ]]; then
+            echo "Error in extracting NEW_VERSION; check your pyproject.toml format"
+            echo "::set-output name=should_publish::false"
+            exit 0  # Exit safely to prevent CI failure
+          fi
+
           if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
             echo "Version changed from $OLD_VERSION to $NEW_VERSION."
             echo "::set-output name=should_publish::true"
