@@ -94,7 +94,7 @@ jobs:
           else
             if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
               echo "Version changed from $OLD_VERSION to $NEW_VERSION."
-              echo "::set-output name=should_publish::true"
+              echo "::set-output name=should_publish::false"
             else
               echo "No version change detected."
               echo "::set-output name=should_publish::false"
