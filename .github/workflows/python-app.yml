@@ -75,32 +75,36 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Fetch all history for all branches and tags
 
-      - name: Check for version change in pyproject.toml
-        id: check_version_change
+      - name: Fetch main branch
         run: |
-          git fetch --unshallow || git fetch --depth=100
-      
-          OLD_VERSION=$(git diff HEAD^ HEAD -- pyproject.toml | grep -Po '(?<=version = ")[^"]*' || echo "")
-          echo "old version: $OLD_VERSION"
-      
-          NEW_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "new version: $NEW_VERSION"
-      
-          if [[ -z "$OLD_VERSION" ]]; then
-            echo "Failed to fetch old version or it's the first commit."
+          git fetch origin main:main
+
+      - name: Get version from pyproject.toml in PR
+        id: pr_version
+        run: |
+          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "PR version: $PR_VERSION"
+          echo "::set-output name=pr_version::$PR_VERSION"
+
+      - name: Get version from pyproject.toml in main
+        id: main_version
+        run: |
+          git checkout main
+          MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "Main version: $MAIN_VERSION"
+          echo "::set-output name=main_version::$MAIN_VERSION"
+
+      - name: Compare versions and set flag
+        run: |
+          if [[ "${{ steps.pr_version.outputs.pr_version }}" != "${{ steps.main_version.outputs.main_version }}" ]]; then
+            echo "Version changed from ${{ steps.main_version.outputs.main_version }} to ${{ steps.pr_version.outputs.pr_version }}."
             echo "::set-output name=should_publish::false"
           else
-            if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
-              echo "Version changed from $OLD_VERSION to $NEW_VERSION."
-              echo "::set-output name=should_publish::false"
-            else
-              echo "No version change detected."
-              echo "::set-output name=should_publish::false"
-            fi
+            echo "No version change detected."
+            echo "::set-output name=should_publish::false"
           fi
-
 
       - name: Set up python
         if: steps.check_version_change.outputs.should_publish == 'true'
