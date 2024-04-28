@@ -67,7 +67,7 @@ jobs:
           poetry run coverage report
           poetry run coverage xml
 
-  check_version:
+  check_version_change:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     outputs:
@@ -109,8 +109,8 @@ jobs:
           fi
 
   publish:
-    needs: [build_and_test, check_version]
-    if: needs.check_version.outputs.should_publish == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build_and_test, check_version_change]
+    if: needs.check_version_change.outputs.should_publish == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
