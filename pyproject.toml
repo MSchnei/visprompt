@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "visprompt"
-version = "0.1.3"
+version = "0.1.4"
 description = "Repository and basic GUI for experimenting with visual prompting based on SAM and segGPT."
 authors = ["mschnei"]
 homepage = "https://github.com/MSchnei/visprompt"
