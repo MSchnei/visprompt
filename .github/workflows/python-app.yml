@@ -75,23 +75,29 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Fetch main branch
+      - name: Fetch main branch (current and before merge)
         run: |
-          git fetch --depth=2 origin main:refs/remotes/origin/main
-
+          git fetch origin ${{ github.event.before }}:refs/remotes/origin/main-before
+          git fetch origin main:refs/remotes/origin/main-current
+      - name: Get version from main before merge
+        id: main_previous_version
+        run: |
+          git checkout refs/remotes/origin/main-before
+          MAIN_PREVIOUS_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "Main previous version: $MAIN_PREVIOUS_VERSION"
+          echo "::set-output name=main_previous_version::$MAIN_PREVIOUS_VERSION"
+      - name: Get version from main current
+        id: main_current_version
+        run: |
+          git checkout refs/remotes/origin/main-current
+          MAIN_CURRENT_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          echo "Main current version: $MAIN_CURRENT_VERSION"
+          echo "::set-output name=main_current_version::$MAIN_CURRENT_VERSION"
       - name: Compare versions and set flag
         id: compare_versions
         run: |
-          MAIN_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "Main version: $MAIN_VERSION"
-          git checkout ${{ github.event.pull_request.base.sha }}
-          PR_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "PR version: $PR_VERSION"
-          if [[ "$MAIN_VERSION" != "$PR_VERSION" ]]; then
-            echo "Version changed from $MAIN_VERSION to $PR_VERSION."
+          if [[ "${{ steps.main_previous_version.outputs.main_previous_version }}" != "${{ steps.main_current_version.outputs.main_current_version }}" ]]; then
+            echo "Version changed from ${{ steps.main_previous_version.outputs.main_previous_version }} to ${{ steps.main_current_version.outputs.main_current_version }}."
             echo "::set-output name=should_publish::true"
           else
             echo "No version change detected."
