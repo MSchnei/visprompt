@@ -2,9 +2,9 @@ name: Build, test and publish
 
 on:
   push:
-    branches: [ "main", "publish-version-change" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "publish-version-change" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -100,7 +100,7 @@ jobs:
         run: |
           if [[ "${{ steps.pr_version.outputs.pr_version }}" != "${{ steps.main_version.outputs.main_version }}" ]]; then
             echo "Version changed from ${{ steps.main_version.outputs.main_version }} to ${{ steps.pr_version.outputs.pr_version }}."
-            echo "::set-output name=should_publish::false"
+            echo "::set-output name=should_publish::true"
           else
             echo "No version change detected."
             echo "::set-output name=should_publish::false"
