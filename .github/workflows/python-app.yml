@@ -80,31 +80,27 @@ jobs:
       - name: Check for version change in pyproject.toml
         id: check_version_change
         run: |
-          git fetch --depth=2
+          git fetch --unshallow || git fetch --depth=100
       
-          OLD_VERSION=$(git diff HEAD^ HEAD -- pyproject.toml | grep -Po '(?<=version = ")[^"]*') || echo "Failed to get old version"
+          OLD_VERSION=$(git diff HEAD^ HEAD -- pyproject.toml | grep -Po '(?<=version = ")[^"]*' || echo "")
           echo "old version: $OLD_VERSION"
-          if [[ "$OLD_VERSION" == "Failed to get old version" ]]; then
-            echo "Error in extracting OLD_VERSION; assuming first commit or error in command"
-            echo "::set-output name=should_publish::false"
-            exit 0  # Exit safely to prevent CI failure
-          fi
       
-          NEW_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml) || echo "Failed to get new version"
+          NEW_VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
           echo "new version: $NEW_VERSION"
-          if [[ "$NEW_VERSION" == "Failed to get new version" ]]; then
-            echo "Error in extracting NEW_VERSION; check your pyproject.toml format"
+      
+          if [[ -z "$OLD_VERSION" ]]; then
+            echo "Failed to fetch old version or it's the first commit."
             echo "::set-output name=should_publish::false"
-            exit 0  # Exit safely to prevent CI failure
+          else
+            if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
+              echo "Version changed from $OLD_VERSION to $NEW_VERSION."
+              echo "::set-output name=should_publish::true"
+            else
+              echo "No version change detected."
+              echo "::set-output name=should_publish::false"
+            fi
           fi
 
-          if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
-            echo "Version changed from $OLD_VERSION to $NEW_VERSION."
-            echo "::set-output name=should_publish::true"
-          else
-            echo "No version change detected."
-            echo "::set-output name=should_publish::false"
-          fi
 
       - name: Set up python
         if: steps.check_version_change.outputs.should_publish == 'true'
