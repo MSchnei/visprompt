@@ -33,6 +33,11 @@ To add visprompt as a dependency to your poetry project, simply run:
 poetry add visprompt
 ```
 
+To add visprompt as a dependency to your project using `pip`, simply run:
+```bash
+pip install visprompt
+```
+
 ## How to use
 
 There are two modes in which you can use visprompt:
